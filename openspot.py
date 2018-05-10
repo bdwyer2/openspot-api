@@ -2,25 +2,41 @@ import requests, json, re, binascii, hashlib, sys
 
 class OpenSpot():
   def __init__(self, hostname="openspot.local", password="openspot"):
-    self.hostname = hostname
-    self.password = password
+    self.__hostname = hostname
+    self.__password = password
 
-    r = requests.post("http://" + self.hostname + "/gettok.cgi")
+    r = requests.post("http://" + self.__hostname + "/gettok.cgi")
     tok = str(r.json()['token'])
-    tok_pass = (tok + self.password).encode('utf-8')
+    tok_pass = (tok + self.__password).encode('utf-8')
     digest = hashlib.sha256(tok_pass).hexdigest()
-    self.post = {'token': tok, 'digest': digest}
-    login = requests.post("http://" + self.hostname + "/login.cgi", json=self.post)
+    self.__post = {'token': tok, 'digest': digest}
+    login = requests.post("http://" + self.__hostname + "/login.cgi", json=self.__post)
     jwt = login.json()['jwt']
-    self.headers = {"Authorization":"Bearer "+ jwt}
+    self.__headers = {"Authorization":"Bearer "+ jwt}
 
   def get_cwid(self):
-    rcwid = requests.get("http://"+ self.hostname + "/modemcwid.cgi", json=self.post, headers=self.headers)
-    return(rcwid.json())
+    x = requests.get("http://" + self.__hostname + "/modemcwid.cgi", json=self.__post, headers=self.__headers)
+    return(x.json())
 
   def get_nullsettings(self):
-    rnullsettings = requests.get("http://"+ self.hostname + "/nullsettings.cgi", json=self.post, headers=self.headers)
-    return(rnullsettings.json())
+    x = requests.get("http://" + self.__hostname + "/nullsettings.cgi", json=self.__post, headers=self.__headers)
+    return(x.json())
+
+  def get_status(self):
+    x = requests.get("http://" + self.__hostname + "/status.cgi", json=self.__post, headers=self.__headers)
+    return(x.json())
+
+  def get_sms_status(self):
+    x = requests.get("http://" + self.__hostname + "/status-dmrsms.cgi", json=self.__post, headers=self.__headers)
+    return(x.json())
+
+  def get_ip_status(self):
+    x = requests.get("http://" + self.__hostname + "/status-srfipconnserver.cgi", json=self.__post, headers=self.__headers)
+    return(x.json())
+
+  def get_homebrew_settings(self):
+    x = requests.get("http://" + self.__hostname + "/homebrewsettings.cgi", json=self.__post, headers=self.__headers)
+    return(x.json())
 
   def send_sms(self, dstid, srcid, message="hello", calltype=0, fmt=1, tdma_channel=0, modem=1):
     """spot.send_sms(srcid=3109883, dstid=1107812)"""
@@ -36,6 +52,11 @@ class OpenSpot():
            "send_to_modem": modem,
            "send_msg": encoded}
 
-    output = requests.post("http://" + self.hostname + "/status-dmrsms.cgi", json=post, headers=self.headers)
+    output = requests.post("http://" + self.__hostname + "/status-dmrsms.cgi", json=post, headers=self.__headers)
     return(output)
+
+  def reboot():
+    pass
+    #TODO
+
 
